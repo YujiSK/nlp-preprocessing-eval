@@ -433,6 +433,10 @@ task9/
 ![ロジスティック回帰モデルのPermutation Importance](exp_a_extra/expA_permutation_lr.png)
 *図 A.2: ロジスティック回帰モデルにおけるPermutation Importance*
 
+</div>
+
+<div class="figure-grid-2col" markdown="1">
+
 ![ランダムフォレストモデルのPermutation Importance](exp_a_extra/expA_permutation_rf.png)
 *図 A.3: ランダムフォレストモデルにおけるPermutation Importance*
 
@@ -471,7 +475,7 @@ Permutation Importanceは未使用の検証Fold上で算出したため、係数
 
 #### 評価方法
 
-- 全条件・全モデルで同一の5分割StratifiedKFold（shuffle=True, random_state=42）を共用。
+- 本文と同じ5分割StratifiedKFold（shuffle=True, random_state=42）を全条件・全モデルで共用した。
 - Before（行削除）: 学習時は欠損行を除外し、推論時は7特徴量がすべて揃う行だけを予測した。欠損行は予測不能（abstain）として数えた。
 - After（補完）: 数値を学習Foldの中央値、カテゴリを学習Foldの最頻値で補完し、全推論行を予測した。補完器はPipeline内でFoldごとにfitした。
 - `accuracy_predicted`は実際に予測できた行だけの性能、`correct_fraction_all`は正解予測数を全推論要求数で割った運用指標であり、予測不能を不正解相当として扱う。
@@ -496,6 +500,10 @@ Beforeの平均Coverageは0.797、予測不可率は0.203だった。Afterは全
 
 ![Linear SVCのCoverage評価](exp_b_extra/expB_coverage_svc.png)
 *図 B.2: Linear SVCの推論時欠損とCoverage*
+
+</div>
+
+<div class="figure-grid-2col" markdown="1">
 
 ![Random ForestのCoverage評価](exp_b_extra/expB_coverage_rf.png)
 *図 B.3: Random Forestの推論時欠損とCoverage*

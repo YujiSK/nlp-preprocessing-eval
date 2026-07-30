@@ -27,6 +27,10 @@
 ![ロジスティック回帰モデルのPermutation Importance](expA_permutation_lr.png)
 *図 A.2: ロジスティック回帰モデルにおけるPermutation Importance*
 
+</div>
+
+<div class="figure-grid-2col" markdown="1">
+
 ![ランダムフォレストモデルのPermutation Importance](expA_permutation_rf.png)
 *図 A.3: ランダムフォレストモデルにおけるPermutation Importance*
 

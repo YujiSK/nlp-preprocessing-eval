@@ -106,7 +106,8 @@ img[src*="expD_cv_score_bar"] {
   display: block;
 }
 
-/* 2列グリッド（実験A・B共通レイアウト） */
+/* 2図1組の2列グリッド（実験A・B共通レイアウト）。
+ * 各コンテナ内のペアは分割せず、隣接するペア間では改ページを許可する。 */
 .figure-grid-2col {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -125,12 +126,12 @@ img[src*="expD_cv_score_bar"] {
   text-align: center;
 }
 
-/* グリッド内の画像サイズ制限（170pxで統一） */
+/* グリッド内の画像サイズ制限 */
 .figure-grid-2col figure img {
   width: 100% !important;
   max-width: 100% !important;
   height: auto !important;
-  max-height: 170px !important;
+  max-height: 350px !important;
   object-fit: contain !important;
   display: block;
   margin: 0 auto;

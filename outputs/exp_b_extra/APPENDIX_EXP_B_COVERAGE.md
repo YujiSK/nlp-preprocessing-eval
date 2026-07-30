@@ -32,6 +32,10 @@ Beforeの平均Coverageは0.797、予測不可率は0.203だった。Afterは全
 ![Linear SVCのCoverage評価](expB_coverage_svc.png)
 *図 B.2: Linear SVCの推論時欠損とCoverage*
 
+</div>
+
+<div class="figure-grid-2col" markdown="1">
+
 ![Random ForestのCoverage評価](expB_coverage_rf.png)
 *図 B.3: Random Forestの推論時欠損とCoverage*
 
