@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import argparse
 import copy
 import json
 from pathlib import Path
@@ -44,6 +45,11 @@ _ACTIVE_BUILD_DIR = BUILD_DIR
 _ACTIVE_RENDERS_DIR = RENDERS_DIR
 
 MAX_ITERATIONS = 3
+REPORT_STEMS = {
+    "main": ("SUMMARY_REPORT",),
+    "extra": ("SUMMARY_REPORT_extra",),
+    "both": ("SUMMARY_REPORT", "SUMMARY_REPORT_extra"),
+}
 
 
 def _load_overrides() -> dict:
@@ -181,10 +187,28 @@ def run_pipeline(
     }
 
 
-def main() -> int:
-    """本編・発展版を構築し、検査結果を保存する。"""
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """レポートビルドCLIの引数を解析する。"""
+    parser = argparse.ArgumentParser(description="Build and validate PDF report(s).")
+    parser.add_argument(
+        "--target",
+        "-t",
+        choices=tuple(REPORT_STEMS),
+        default="both",
+        help=(
+            "Report to build: 'main' (SUMMARY_REPORT), "
+            "'extra' (SUMMARY_REPORT_extra), or 'both' (default)."
+        ),
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """選択された本編・発展版を構築し、検査結果を保存する。"""
+    args = parse_args(argv)
     reports = {}
-    for stem in ("SUMMARY_REPORT", "SUMMARY_REPORT_extra"):
+    for stem in REPORT_STEMS[args.target]:
+        print(f"Building {stem}.pdf ...")
         reports[stem] = run_pipeline(
             md_path=OUTPUTS_DIR / f"{stem}.md",
             pdf_path=OUTPUTS_DIR / f"{stem}.pdf",
@@ -192,6 +216,7 @@ def main() -> int:
             renders_dir=RENDERS_ROOT / stem.lower(),
         )
         report_path = OUTPUTS_DIR / "reports" / f"layout_{stem.lower()}.json"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(
             json.dumps(reports[stem], ensure_ascii=False, indent=2, default=str),
             encoding="utf-8",
