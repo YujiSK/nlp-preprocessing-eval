@@ -259,11 +259,10 @@ def test_fixture_end_to_end_zero_violations(fixture_workdir):
     """
     md_path = fixture_workdir / "sample_layout.md"
     registry_build_dir = fixture_workdir / "_build"
-    missing_overrides = fixture_workdir / "no_overrides.yml"
 
     html_path, registry_path = report_build.build(
         md_path=md_path,
-        overrides_path=missing_overrides,
+        overrides={"page_break_before": [], "keep_together": []},
         css_path=report_build.DEFAULT_CSS_PATH,
         build_dir=registry_build_dir,
     )
@@ -284,13 +283,15 @@ def test_fixture_end_to_end_zero_violations(fixture_workdir):
 # ---------------------------------------------------------------------------
 
 
-def _fake_result(score, violation_types):
+def _fake_result(score, violation_types, unresolved=None):
+    unresolved = unresolved or []
     return {
         "pdf": "dummy.pdf",
         "page_count": 1,
         "n_registry_entries": 1,
         "violations": [{"type": t, "id": f"x-{i}", "detail": "", "pages": [1]} for i, t in enumerate(violation_types)],
-        "unresolved": [],
+        "unresolved": unresolved,
+        "status": "FAIL" if violation_types else ("INDETERMINATE" if unresolved else "PASS"),
         "score": score,
     }
 
@@ -302,15 +303,22 @@ def test_repair_loop_stops_when_zero_violations(monkeypatch, tmp_path):
         _fake_result(0, []),
     ]
 
-    def fake_build_render_check():
+    def fake_build_render_check(**kwargs):
         calls["n"] += 1
         return sequence[min(calls["n"] - 1, len(sequence) - 1)]
 
     monkeypatch.setattr(pipeline, "_build_render_check", fake_build_render_check)
-    monkeypatch.setattr(pipeline, "OVERRIDES_PATH", tmp_path / "layout_overrides.yml")
-    monkeypatch.setattr(pipeline.pdf_render, "render_pdf_to_page_images", lambda pdf_path, out_dir: [])
+    monkeypatch.setattr(pipeline, "_load_override_config", pipeline._default_override_config)
+    monkeypatch.setattr(pipeline, "_save_generated_overrides", lambda *args, **kwargs: None)
+    monkeypatch.setattr(pipeline, "_cleanup_transient_artifacts", lambda stem: None)
 
-    summary = pipeline.run_pipeline(max_iterations=3)
+    summary = pipeline.run_pipeline(
+        target="main",
+        md_path=tmp_path / "SUMMARY_REPORT.md",
+        pdf_path=tmp_path / "SUMMARY_REPORT.pdf",
+        build_dir=tmp_path / "_build",
+        max_iterations=3,
+    )
 
     assert summary["final_result"]["score"] == 0
     assert calls["n"] == 3  # iter1(-2) -> iter2(0, stop) -> final confirmation build
@@ -326,15 +334,22 @@ def test_repair_loop_rolls_back_when_no_improvement(monkeypatch, tmp_path):
         _fake_result(-2, ["orphan_heading"]),  # final confirmation build
     ]
 
-    def fake_build_render_check():
+    def fake_build_render_check(**kwargs):
         calls["n"] += 1
         return sequence[min(calls["n"] - 1, len(sequence) - 1)]
 
     monkeypatch.setattr(pipeline, "_build_render_check", fake_build_render_check)
-    monkeypatch.setattr(pipeline, "OVERRIDES_PATH", tmp_path / "layout_overrides.yml")
-    monkeypatch.setattr(pipeline.pdf_render, "render_pdf_to_page_images", lambda pdf_path, out_dir: [])
+    monkeypatch.setattr(pipeline, "_load_override_config", pipeline._default_override_config)
+    monkeypatch.setattr(pipeline, "_save_generated_overrides", lambda *args, **kwargs: None)
+    monkeypatch.setattr(pipeline, "_cleanup_transient_artifacts", lambda stem: None)
 
-    summary = pipeline.run_pipeline(max_iterations=3)
+    summary = pipeline.run_pipeline(
+        target="main",
+        md_path=tmp_path / "SUMMARY_REPORT.md",
+        pdf_path=tmp_path / "SUMMARY_REPORT.pdf",
+        build_dir=tmp_path / "_build",
+        max_iterations=3,
+    )
 
     actions = [h.get("action") for h in summary["history"]]
     assert "rejected_rollback" in actions
@@ -355,13 +370,13 @@ def test_pipeline_main_selects_requested_reports(monkeypatch, tmp_path, target, 
     """--targetに応じて指定レポートだけをビルドする。"""
     calls = []
 
-    def fake_run_pipeline(**kwargs):
+    def fake_run_without_repair(**kwargs):
         calls.append(kwargs["md_path"].stem)
-        return {"final_result": {"violations": []}}
+        return {"final_result": {"status": "PASS", "violations": []}}
 
     monkeypatch.setattr(pipeline, "OUTPUTS_DIR", tmp_path)
     monkeypatch.setattr(pipeline, "RENDERS_ROOT", tmp_path / "renders")
-    monkeypatch.setattr(pipeline, "run_pipeline", fake_run_pipeline)
+    monkeypatch.setattr(pipeline, "run_without_repair", fake_run_without_repair)
 
     assert pipeline.main(["--target", target]) == 0
     assert calls == expected_stems
@@ -398,3 +413,152 @@ def test_pipeline_main_pdf_only_skips_validation(monkeypatch, tmp_path):
 
     assert pipeline.main(["--target", "both", "--pdf-only"]) == 0
     assert calls == ["SUMMARY_REPORT", "SUMMARY_REPORT_extra"]
+
+
+def test_short_repeated_headings_resolve_with_vertical_cursor():
+    """2文字見出しでも同一ページ内のY座標順に別要素として解決する。"""
+    pages = [
+        make_page(
+            1,
+            "結果 最初の本文テキスト 結果 二番目の本文テキスト",
+            words=[
+                {"text": "結果", "top": 100.0},
+                {"text": "最初の本文テキスト", "top": 130.0},
+                {"text": "結果", "top": 300.0},
+                {"text": "二番目の本文テキスト", "top": 330.0},
+            ],
+        )
+    ]
+    registry = [
+        {
+            "id": "heading-results-a",
+            "type": "heading",
+            "level": "h4",
+            "text": "結果",
+            "next_block_text": "最初の本文テキスト",
+        },
+        {
+            "id": "heading-results-b",
+            "type": "heading",
+            "level": "h4",
+            "text": "結果",
+            "next_block_text": "二番目の本文テキスト",
+        },
+    ]
+
+    resolved = checker.resolve_registry_pages(pages, registry)
+
+    assert resolved["heading-results-a"]["self"]["page"] == 1
+    assert resolved["heading-results-a"]["self"]["top"] == 100.0
+    assert resolved["heading-results-b"]["self"]["page"] == 1
+    assert resolved["heading-results-b"]["self"]["top"] == 300.0
+
+
+def test_unresolved_produces_indeterminate_status_and_score_penalty(monkeypatch):
+    """違反0でも未解決があればPASSにせず、スコアへ減点する。"""
+    pages = [make_page(1, "別のテキスト")]
+    registry = [
+        {
+            "id": "heading-missing",
+            "type": "heading",
+            "level": "h4",
+            "text": "結果",
+            "next_block_text": "存在しない本文",
+        }
+    ]
+    resolved = checker.resolve_registry_pages(pages, registry)
+    violations, unresolved = checker.detect_orphan_headings(pages, registry, resolved)
+
+    assert violations == []
+    assert unresolved[0]["failed_probes"] == ["self", "next"]
+    assert checker.compute_score(violations, unresolved) == -checker.UNRESOLVED_WEIGHT
+
+
+def test_semantic_fallback_heading_id_is_not_sibling_order_dependent():
+    """無関係な兄弟見出しの追加で「結果」のfallback IDが変化しない。"""
+    first = report_build._IdAllocator()
+    first.heading_id("h1", "タイトル")
+    first.heading_id("h2", "付録C：発展実験")
+    first.heading_id("h3", "実験A（発展）：Permutation Importance")
+    expected = first.heading_id("h4", "結果")
+
+    second = report_build._IdAllocator()
+    second.heading_id("h1", "タイトル")
+    second.heading_id("h2", "付録C：発展実験")
+    second.heading_id("h3", "実験A（発展）：Permutation Importance")
+    second.heading_id("h4", "方法")
+    actual = second.heading_id("h4", "結果")
+
+    assert actual == expected
+    assert "section-" not in actual
+    assert "-results-" in actual
+
+
+def test_generated_override_save_preserves_manual_and_other_target(tmp_path):
+    """自動保存はmanualと別targetのgenerated設定を変更しない。"""
+    path = tmp_path / "layout_overrides.yml"
+    path.write_text(
+        """
+manual:
+  main:
+    page_break_before: [heading-manual-main]
+    keep_together: []
+  extra:
+    page_break_before: [heading-manual-extra]
+    keep_together: [figure-manual]
+generated:
+  main:
+    page_break_before: [heading-main]
+    keep_together: []
+  extra:
+    page_break_before: [heading-extra-old]
+    keep_together: []
+""".strip(),
+        encoding="utf-8",
+    )
+
+    pipeline._save_generated_overrides(
+        "extra",
+        {"page_break_before": ["heading-extra-new"], "keep_together": ["figure-extra"]},
+        path=path,
+    )
+    config = pipeline._load_override_config(path)
+
+    assert config["manual"]["main"]["page_break_before"] == ["heading-manual-main"]
+    assert config["manual"]["extra"]["page_break_before"] == ["heading-manual-extra"]
+    assert config["manual"]["extra"]["keep_together"] == ["figure-manual"]
+    assert config["generated"]["main"]["page_break_before"] == ["heading-main"]
+    assert config["generated"]["extra"]["page_break_before"] == ["heading-extra-new"]
+    assert config["generated"]["extra"]["keep_together"] == ["figure-extra"]
+
+
+def test_no_repair_path_never_saves_overrides(monkeypatch, tmp_path):
+    """通常モードでは保存関数が絶対に呼ばれない。"""
+    monkeypatch.setattr(pipeline, "_load_override_config", pipeline._default_override_config)
+    monkeypatch.setattr(
+        pipeline,
+        "_build_render_check",
+        lambda **kwargs: _fake_result(0, []),
+    )
+    monkeypatch.setattr(pipeline, "_cleanup_transient_artifacts", lambda stem: None)
+    monkeypatch.setattr(
+        pipeline,
+        "_save_generated_overrides",
+        lambda *args, **kwargs: pytest.fail("no-repair mode attempted to save YAML"),
+    )
+
+    result = pipeline.run_without_repair(
+        target="extra",
+        md_path=tmp_path / "SUMMARY_REPORT_extra.md",
+        pdf_path=tmp_path / "SUMMARY_REPORT_extra.pdf",
+        build_dir=tmp_path / "_build",
+    )
+
+    assert result["mode"] == "no-repair"
+    assert result["final_result"]["status"] == "PASS"
+
+
+def test_parse_args_defaults_to_no_repair():
+    args = pipeline.parse_args(["--target", "extra"])
+    assert args.auto_repair is False
+    assert args.pdf_only is False

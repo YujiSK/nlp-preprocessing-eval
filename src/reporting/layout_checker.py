@@ -94,10 +94,105 @@ def load_registry(registry_path: Path) -> list[dict]:
 
 
 TEXT_MATCH_THRESHOLD = 0.6  # needleのトライグラムのうち、このFraction以上が一致すれば「そのページに存在する」とみなす
+UNRESOLVED_WEIGHT = 2
+
+
+def _word_locations(page: PageData, needle: str) -> list[float]:
+    """短い見出しを含むPDF単語の上端座標を、ページ内の出現順で返す。"""
+    needle_n = _normalize(needle)
+    exact: list[float] = []
+    partial: list[float] = []
+    for word in page.words:
+        word_n = _normalize(word.get("text", ""))
+        if word_n == needle_n:
+            exact.append(float(word["top"]))
+        elif needle_n and needle_n in word_n:
+            partial.append(float(word["top"]))
+    return exact or partial
+
+
+def _first_token_locations(page: PageData, needle: str) -> list[float]:
+    """長文プローブの先頭文字列に対応する単語位置を返す。"""
+    token = _normalize(needle)[:6]
+    if not token:
+        return []
+    locations = []
+    for word in page.words:
+        word_n = _normalize(word.get("text", ""))
+        if word_n.startswith(token[:3]) or token[:3] in word_n:
+            locations.append(float(word["top"]))
+    return locations
+
+
+def _find_text_location(
+    pages: list[PageData],
+    needle: str,
+    min_len: int = 4,
+    min_page: int = 1,
+    min_top: float = 0.0,
+) -> tuple[int | None, bool, float | None, float]:
+    """文書位置カーソルを考慮してテキストのページ・Y座標・一致度を返す。"""
+    needle_n = _normalize(needle)
+    if not needle_n:
+        return None, False, None, 0.0
+
+    candidates = [p for p in pages if p.number >= min_page]
+    if not candidates:
+        return None, False, None, 0.0
+
+    # 2〜3文字の日本語見出しはトライグラムを作れないため、PDF単語との完全一致を優先する。
+    if len(needle_n) < min_len:
+        for page in candidates:
+            floor = min_top if page.number == min_page else 0.0
+            locations = [top for top in _word_locations(page, needle_n) if top >= floor]
+            if locations:
+                return page.number, False, min(locations), 1.0
+        return None, False, None, 0.0
+
+    needle_trigrams = _trigrams(needle_n)
+    if not needle_trigrams:
+        return None, False, None, 0.0
+
+    scored: list[tuple[float, int, float | None]] = []
+    for page in candidates:
+        locations = _first_token_locations(page, needle_n)
+        floor = min_top if page.number == min_page else 0.0
+        valid_locations = [top for top in locations if top >= floor]
+        if page.number == min_page and locations and not valid_locations:
+            continue
+        score = len(needle_trigrams & page.trigrams) / len(needle_trigrams)
+        top = min(valid_locations) if valid_locations else None
+        scored.append((score, page.number, top))
+
+    best_score, best_page, best_top = max(scored, default=(0.0, None, None), key=lambda item: item[0])
+    if best_page is not None and best_score >= TEXT_MATCH_THRESHOLD:
+        return best_page, False, best_top, best_score
+
+    # 隣接ページ結合はページ境界の分断検出専用。開始ページのYカーソルも尊重する。
+    best_pair_page, best_pair_score = None, 0.0
+    for i in range(len(candidates) - 1):
+        first = candidates[i]
+        if first.number == min_page:
+            locations = _first_token_locations(first, needle_n)
+            if locations and not any(top >= min_top for top in locations):
+                continue
+        combined = first.trigrams | candidates[i + 1].trigrams
+        score = len(needle_trigrams & combined) / len(needle_trigrams)
+        if score > best_pair_score:
+            best_pair_page, best_pair_score = first.number, score
+
+    if best_pair_page is not None and best_pair_score >= TEXT_MATCH_THRESHOLD:
+        return best_pair_page, True, None, best_pair_score
+
+    return None, False, None, max(best_score, best_pair_score)
 
 
 def find_page_for_text(
-    pages: list[PageData], needle: str, min_len: int = 4, min_page: int = 1
+    pages: list[PageData],
+    needle: str,
+    min_len: int = 4,
+    min_page: int = 1,
+    min_top: float = 0.0,
 ) -> tuple[int | None, bool]:
     """`needle`が最も高い割合で出現するページ番号 (1-indexed, `min_page`以降) を返す。閾値未満なら None。
 
@@ -113,38 +208,14 @@ def find_page_for_text(
     戻り値の2要素目は「単独ページでは閾値に届かず、隣接ページ結合でのみ閾値を満たした
     （ページ境界を跨いで分断されている可能性がある）」ことを示すフラグ。
     """
-    needle_n = _normalize(needle)
-    if len(needle_n) < min_len:
-        return None, False
-    needle_trigrams = _trigrams(needle_n)
-    if not needle_trigrams:
-        return None, False
-
-    candidates = [p for p in pages if p.number >= min_page]
-    if not candidates:
-        return None, False
-
-    best_page, best_score = None, 0.0
-    for p in candidates:
-        score = len(needle_trigrams & p.trigrams) / len(needle_trigrams)
-        if score > best_score:
-            best_page, best_score = p.number, score
-
-    if best_score >= TEXT_MATCH_THRESHOLD:
-        return best_page, False
-
-    # 隣接ページの結合トライグラムで再試行（ページ境界をまたぐ分断を検知するため）
-    best_pair_page, best_pair_score = None, 0.0
-    for i in range(len(candidates) - 1):
-        combined = candidates[i].trigrams | candidates[i + 1].trigrams
-        score = len(needle_trigrams & combined) / len(needle_trigrams)
-        if score > best_pair_score:
-            best_pair_page, best_pair_score = candidates[i].number, score
-
-    if best_pair_score >= TEXT_MATCH_THRESHOLD:
-        return best_pair_page, True
-
-    return None, False
+    page, split, _, _ = _find_text_location(
+        pages,
+        needle,
+        min_len=min_len,
+        min_page=min_page,
+        min_top=min_top,
+    )
+    return page, split
 
 
 def resolve_registry_pages(pages: list[PageData], registry: list[dict]) -> dict[str, dict]:
@@ -155,7 +226,8 @@ def resolve_registry_pages(pages: list[PageData], registry: list[dict]) -> dict[
     registry は `report_build.py` で文書順に構築されているため、この前提が成り立つ。
     """
     resolved: dict[str, dict] = {}
-    cursor = 1
+    cursor_page = 1
+    cursor_top = 0.0
 
     for entry in registry:
         probes: list[tuple[str, str]] = []
@@ -175,18 +247,37 @@ def resolve_registry_pages(pages: list[PageData], registry: list[dict]) -> dict[
                 probes.append(("last", entry["last_line"]))
 
         entry_result: dict[str, dict] = {}
-        local_floor = cursor
+        local_page = cursor_page
+        local_top = cursor_top
         for probe_name, text in probes:
-            page, split = find_page_for_text(pages, text, min_page=local_floor)
-            entry_result[probe_name] = {"page": page, "split_across_pages": split}
+            page, split, top, score = _find_text_location(
+                pages,
+                text,
+                min_page=local_page,
+                min_top=local_top,
+            )
+            entry_result[probe_name] = {
+                "page": page,
+                "top": top,
+                "match_score": score,
+                "split_across_pages": split,
+            }
             if page is not None:
-                local_floor = page
+                if page > local_page:
+                    local_top = 0.0
+                local_page = page
+                if top is not None:
+                    local_top = top + 0.1
 
         resolved[entry["id"]] = entry_result
 
         anchor = entry_result.get("self") or entry_result.get("first")
         if anchor and anchor["page"] is not None:
-            cursor = anchor["page"]
+            if anchor["page"] > cursor_page:
+                cursor_top = 0.0
+            cursor_page = anchor["page"]
+            if anchor.get("top") is not None:
+                cursor_top = anchor["top"] + 0.1
 
     return resolved
 
@@ -220,7 +311,21 @@ def detect_orphan_headings(
         next_page = probes.get("next", {}).get("page")
 
         if heading_page is None or next_page is None:
-            unresolved.append({"id": entry["id"], "check": "orphan_heading", "reason": "text_not_matched"})
+            failed = [
+                name
+                for name, page in (("self", heading_page), ("next", next_page))
+                if page is None
+            ]
+            unresolved.append(
+                {
+                    "id": entry["id"],
+                    "check": "orphan_heading",
+                    "reason": "text_not_matched",
+                    "failed_probes": failed,
+                    "heading_text": entry["text"],
+                    "next_block_text": entry.get("next_block_text", ""),
+                }
+            )
             continue
 
         if heading_page != next_page:
@@ -233,7 +338,11 @@ def detect_orphan_headings(
                 }
             )
         else:
-            ratio = _word_page_position_ratio(pages, heading_page, entry["text"])
+            top = probes.get("self", {}).get("top")
+            page = next((p for p in pages if p.number == heading_page), None)
+            ratio = (top / page.height) if top is not None and page and page.height else None
+            if ratio is None:
+                ratio = _word_page_position_ratio(pages, heading_page, entry["text"])
             if ratio is not None and ratio > 0.90:
                 violations.append(
                     {
@@ -345,8 +454,12 @@ def detect_overflow(pages: list[PageData]) -> list[dict]:
     return violations
 
 
-def compute_score(violations: list[dict]) -> int:
-    return -sum(VIOLATION_WEIGHTS.get(v["type"], 1) for v in violations)
+def compute_score(violations: list[dict], unresolved: list[dict] | None = None) -> int:
+    unresolved = unresolved or []
+    return -(
+        sum(VIOLATION_WEIGHTS.get(v["type"], 1) for v in violations)
+        + UNRESOLVED_WEIGHT * len(unresolved)
+    )
 
 
 def run_checks(pdf_path: Path, registry_path: Path) -> dict:
@@ -364,13 +477,15 @@ def run_checks(pdf_path: Path, registry_path: Path) -> dict:
 
     violations.extend(detect_overflow(pages))
 
+    status = "FAIL" if violations else ("INDETERMINATE" if unresolved else "PASS")
     return {
         "pdf": str(pdf_path),
         "page_count": len(pages),
         "n_registry_entries": len(registry),
         "violations": violations,
         "unresolved": unresolved,
-        "score": compute_score(violations),
+        "status": status,
+        "score": compute_score(violations, unresolved),
     }
 
 
@@ -388,7 +503,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     result = run_checks(pdf, registry)
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 1 if result["violations"] else 0
+    return 1 if result["status"] != "PASS" else 0
 
 
 def main_all_reports() -> int:
@@ -401,7 +516,7 @@ def main_all_reports() -> int:
             root / "outputs" / "renders" / "_build" / stem.lower() / f"{stem}.source_registry.json",
         )
     print(json.dumps(reports, ensure_ascii=False, indent=2))
-    return 1 if any(report["violations"] for report in reports.values()) else 0
+    return 1 if any(report["status"] != "PASS" for report in reports.values()) else 0
 
 
 if __name__ == "__main__":

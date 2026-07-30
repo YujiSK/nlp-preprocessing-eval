@@ -3,7 +3,7 @@
 pdf_pipeline_audit.md で指摘した再現性の欠如（使い捨てHTML・ID未付与）を解消するため、
 - 中間HTMLをレポート名ごとに`outputs/renders/_build/{stem}.render.html`として保存する
 - 見出し／図／表／コードブロックに安定した `data-source-id` を付与する
-- `configs/layout_overrides.yml` の指示（page_break_before / keep_together）を反映する
+- 呼び出し元から直接受け取ったレイアウト指示を反映する
 - `outputs/renders/_build/source_registry.json` に ID→要素情報のレジストリを出力する
   （`src/reporting/layout_checker.py` がこのレジストリとPDFを突き合わせて検査する）
 
@@ -13,19 +13,17 @@ pdf_pipeline_audit.md で指摘した再現性の欠如（使い捨てHTML・ID�
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 from pathlib import Path
 
 import markdown
-import yaml
 from bs4 import BeautifulSoup, NavigableString, Tag
 
 TASK9_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MD_PATH = TASK9_ROOT / "outputs" / "SUMMARY_REPORT.md"
-DEFAULT_OVERRIDES_PATH = TASK9_ROOT / "configs" / "layout_overrides.yml"
 DEFAULT_CSS_PATH = TASK9_ROOT / "assets" / "styles" / "report.css"
-DEFAULT_RENDERS_DIR = TASK9_ROOT / "outputs" / "renders"
-DEFAULT_BUILD_DIR = DEFAULT_RENDERS_DIR / "_build"
+DEFAULT_BUILD_DIR = TASK9_ROOT / "outputs" / "renders" / "_build"
 
 LONG_TABLE_ROW_THRESHOLD = 15  # これを超える行数の表は "long-table"（分割許可）とする
 LONG_CODE_LINE_THRESHOLD = 30  # これを超える行数のコードは "long-code"（分割許可）とする
@@ -34,17 +32,21 @@ _SECTION_LABEL_SLUGS = {
     "事実": "fact",
     "メカニズム": "mechanism",
     "改善策・提言": "recommendation",
+    "方法": "method",
+    "結果": "results",
+    "解釈": "interpretation",
+    "解釈上の注意": "interpretation-notes",
+    "実務的示唆": "practical-implications",
+    "再現性": "reproducibility",
+    "設計": "design",
+    "目的と設計": "purpose-design",
+    "目的とデータ": "purpose-data",
+    "評価方法": "evaluation-method",
+    "結果の要約": "results-summary",
+    "語彙数・決定論的前処理コスト": "vocabulary-processing-cost",
+    "要因別macro-F1差": "factor-macro-f1-difference",
+    "macro-F1": "macro-f1",
 }
-
-
-def load_overrides(path: Path = DEFAULT_OVERRIDES_PATH) -> dict:
-    if not path.exists():
-        return {"page_break_before": [], "keep_together": []}
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    return {
-        "page_break_before": list(data.get("page_break_before") or []),
-        "keep_together": list(data.get("keep_together") or []),
-    }
 
 
 def markdown_to_html(md_text: str) -> str:
@@ -55,52 +57,84 @@ def markdown_to_html(md_text: str) -> str:
 
 
 class _IdAllocator:
-    """文書順に見出しを走査し、章コンテキストに基づき安定したIDを割り当てる。"""
+    """見出し階層と本文から、挿入順に依存しない安定IDを割り当てる。"""
 
     def __init__(self) -> None:
         self.chapter = "root"
-        self._fallback_counters: dict[str, int] = {}
+        self._heading_stack: dict[int, str] = {}
+        self._used_heading_ids: set[str] = set()
+        self._content_counters: dict[str, int] = {}
+
+    @staticmethod
+    def _semantic_slug(text: str) -> str:
+        inner = re.sub(r"[【】]", "", text).strip()
+        if inner in _SECTION_LABEL_SLUGS:
+            return _SECTION_LABEL_SLUGS[inner]
+        experiment = re.match(r"実験([A-D])", inner)
+        if experiment:
+            return f"experiment-{experiment.group(1).lower()}"
+        ascii_tokens = re.findall(r"[A-Za-z0-9]+", inner.lower())
+        return "-".join(ascii_tokens[:6]) or "section"
+
+    def _fallback_heading_id(self, level: int, text: str) -> str:
+        parent = self._heading_stack.get(level - 1, f"heading-{self.chapter}")
+        slug = self._semantic_slug(text)
+        normalized = " ".join(text.split())
+        digest = hashlib.sha1(f"{parent}|h{level}|{normalized}".encode("utf-8")).hexdigest()[:10]
+        return f"{parent}-{slug}-{digest}"
+
+    def _register_heading(self, level: int, heading_id: str) -> str:
+        if heading_id in self._used_heading_ids:
+            raise ValueError(
+                f"Duplicate semantic heading id {heading_id!r}; "
+                "add an explicit numbered heading or make sibling heading text unique."
+            )
+        self._used_heading_ids.add(heading_id)
+        self._heading_stack[level] = heading_id
+        for child_level in tuple(self._heading_stack):
+            if child_level > level:
+                del self._heading_stack[child_level]
+        return heading_id
 
     def heading_id(self, level: str, text: str) -> str:
         text = text.strip()
+        level_number = int(level[1:])
 
         if level == "h1":
-            return "heading-title"
+            return self._register_heading(level_number, "heading-title")
 
         if level == "h2":
             m = re.match(r"第(\d+)章", text)
             if m:
                 self.chapter = m.group(1)
-                return f"heading-{self.chapter}"
+                return self._register_heading(level_number, f"heading-{self.chapter}")
             m = re.match(r"付録([A-Za-z])", text)
             if m:
                 self.chapter = f"appendix-{m.group(1).lower()}"
-                return f"heading-{self.chapter}"
-            return "heading-subtitle"
+                return self._register_heading(level_number, f"heading-{self.chapter}")
+            return self._register_heading(level_number, self._fallback_heading_id(level_number, text))
 
         # h3 / h4
         m = re.match(r"^(\d+)\.(\d+)", text)
         if m:
-            return f"heading-{m.group(1)}-{m.group(2)}"
+            return self._register_heading(level_number, f"heading-{m.group(1)}-{m.group(2)}")
         m = re.match(r"^([A-Za-z])\.(\d+)", text)
         if m:
-            return f"heading-appendix-{m.group(1).lower()}-{m.group(2)}"
+            return self._register_heading(
+                level_number, f"heading-appendix-{m.group(1).lower()}-{m.group(2)}"
+            )
         m = re.match(r"原則(\d+)", text)
         if m:
-            return f"heading-{self.chapter}-principle-{m.group(1)}"
+            return self._register_heading(
+                level_number, f"heading-{self.chapter}-principle-{m.group(1)}"
+            )
 
-        inner = re.sub(r"[【】]", "", text)
-        slug = _SECTION_LABEL_SLUGS.get(inner)
-        if slug is None:
-            key = f"{self.chapter}-fallback"
-            self._fallback_counters[key] = self._fallback_counters.get(key, 0) + 1
-            slug = f"section-{self._fallback_counters[key]}"
-        return f"heading-{self.chapter}-{slug}"
+        return self._register_heading(level_number, self._fallback_heading_id(level_number, text))
 
     def next_index(self, kind: str) -> int:
         key = f"{self.chapter}-{kind}"
-        self._fallback_counters[key] = self._fallback_counters.get(key, 0) + 1
-        return self._fallback_counters[key]
+        self._content_counters[key] = self._content_counters.get(key, 0) + 1
+        return self._content_counters[key]
 
 
 def _visible_text(tag) -> str:
@@ -239,9 +273,11 @@ def _process_document_order(soup: BeautifulSoup, allocator: _IdAllocator, regist
 
 
 def _apply_overrides(soup: BeautifulSoup, overrides: dict) -> None:
+    missing_ids: list[str] = []
     for oid in overrides.get("page_break_before", []):
         el = soup.find(attrs={"data-source-id": oid})
         if el is None:
+            missing_ids.append(oid)
             continue
         classes = el.get("class", [])
         classes.append("force-page-break")
@@ -250,18 +286,24 @@ def _apply_overrides(soup: BeautifulSoup, overrides: dict) -> None:
     for oid in overrides.get("keep_together", []):
         el = soup.find(attrs={"data-source-id": oid})
         if el is None:
+            missing_ids.append(oid)
             continue
         classes = el.get("class", [])
         classes.append("keep-together")
         el["class"] = classes
 
+    if missing_ids:
+        raise ValueError(
+            "Unknown layout override data-source-id(s): "
+            + ", ".join(sorted(set(missing_ids)))
+        )
+
 
 def build(
     md_path: Path = DEFAULT_MD_PATH,
-    overrides_path: Path = DEFAULT_OVERRIDES_PATH,
+    overrides: dict | None = None,
     css_path: Path = DEFAULT_CSS_PATH,
     build_dir: Path = DEFAULT_BUILD_DIR,
-    render_dir: Path | None = None,
 ) -> tuple[Path, Path]:
     """Markdownをビルドし、(html_path, registry_path)を返す。"""
     build_dir.mkdir(parents=True, exist_ok=True)
@@ -276,8 +318,10 @@ def build(
 
     _process_document_order(soup, allocator, registry)
 
-    overrides = load_overrides(overrides_path)
-    _apply_overrides(soup, overrides)
+    _apply_overrides(
+        soup,
+        overrides or {"page_break_before": [], "keep_together": []},
+    )
 
     css_text = css_path.read_text(encoding="utf-8")
     full_html = (
@@ -288,18 +332,11 @@ def build(
         f"{soup.body.decode_contents()}\n</body>\n</html>\n"
     )
 
-    # 最終レポートはrenders/へ集約し、任意のテスト文書は入力元の近傍へ隔離する。
-    if render_dir is None:
-        render_dir = DEFAULT_RENDERS_DIR if md_path.parent == DEFAULT_MD_PATH.parent else md_path.parent
-    html_out = Path(render_dir) / f"_{md_path.stem.lower()}_render.html"
-    html_out.parent.mkdir(parents=True, exist_ok=True)
-    html_out.write_text(full_html, encoding="utf-8")
-
     registry_out = build_dir / f"{md_path.stem}.source_registry.json"
     registry_out.write_text(json.dumps(registry, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # 監査・再現性のため、生成HTMLの控えを outputs/renders/_build/ にも保存する
-    (build_dir / f"{md_path.stem}.render.html").write_text(full_html, encoding="utf-8")
+    html_out = build_dir / f"{md_path.stem}.render.html"
+    html_out.write_text(full_html, encoding="utf-8")
 
     return html_out, registry_out
 

@@ -34,6 +34,24 @@ PYTHONPATH=. python3 scripts/report/check_pdf_layout.py
 pytest tests/
 ```
 
+Report builds are non-destructive by default: they build and validate once without
+rewriting `configs/layout_overrides.yml`. Automatic repair must be explicitly enabled.
+
+```bash
+# Safe default: build and validate without changing layout overrides
+PYTHONPATH=. python3 scripts/report/build_report.py -t both
+
+# Opt-in repair: update only generated.extra after an atomic write
+PYTHONPATH=. python3 scripts/report/build_report.py -t extra --auto-repair
+
+# Render only, using existing results and overrides
+PYTHONPATH=. python3 scripts/report/build_report.py -t extra --pdf-only
+```
+
+Manual and generated layout rules are separated by report target under
+`manual.main`, `manual.extra`, `generated.main`, and `generated.extra`. The repair
+loop never modifies the `manual` sections.
+
 ### Source layout rules
 
 - Place reusable functions and classes imported by other Python code under `src/`.
@@ -74,6 +92,24 @@ PYTHONPATH=. python3 scripts/report/build_report.py
 PYTHONPATH=. python3 scripts/report/check_pdf_layout.py
 pytest tests/
 ```
+
+レポートビルドは既定で非破壊です。PDFを1回生成・検査しますが、
+`configs/layout_overrides.yml`は書き換えません。自動修復は明示的に指定します。
+
+```bash
+# 安全な既定動作：設定を変更せず、生成と検査を1回実行
+PYTHONPATH=. python3 scripts/report/build_report.py -t both
+
+# 自動修復を明示：generated.extraだけを原子的に更新
+PYTHONPATH=. python3 scripts/report/build_report.py -t extra --auto-repair
+
+# 既存結果と設定を使い、PDF描画だけを実行
+PYTHONPATH=. python3 scripts/report/build_report.py -t extra --pdf-only
+```
+
+レイアウト指定は対象レポート別の`manual.main`、`manual.extra`、
+`generated.main`、`generated.extra`へ分離されています。自動修復ループは
+`manual`セクションを変更しません。
 
 ### 配置規約
 

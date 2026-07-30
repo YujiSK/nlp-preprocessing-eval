@@ -1,4 +1,4 @@
-"""本編・発展版レポートをMDからPDFへ構築し、レイアウトを検査する。"""
+"""安全な既定動作でレポートを構築する、reporting層の薄いCLIラッパー。"""
 
 from __future__ import annotations
 

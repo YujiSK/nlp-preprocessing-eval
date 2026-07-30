@@ -1,12 +1,21 @@
-# SUMMARY_REPORT*.md本文を書き換えずにPDFレイアウトを調整するためのオーバーライド定義。
-# src/reporting/report_builder.py がビルド時に読み込み、対応する data-source-id 要素へ
-# CSSクラス（force-page-break / keep-together）を付与する。
-#
-# id は outputs/renders/_build/source_registry.json に列挙されているものを指定する。
-# 本ファイルは src/reporting/layout_pipeline.py の自動修復ループによっても更新される
-# （手動編集後に自動修復を実行すると上書きされる場合がある点に注意）。
+# レポート本文を書き換えずにPDFレイアウトを調整する設定。
+# manual.main / manual.extraは人が管理し、自動修復処理は絶対に変更しない。
+# generated.main / generated.extraは--auto-repair指定時だけ対象別に更新される。
 
-page_break_before:
-- heading-1-3
-- heading-appendix-c-section-10
-keep_together: []
+manual:
+  main:
+    page_break_before:
+    - heading-1-3
+    keep_together: []
+  extra:
+    page_break_before:
+    - heading-1-3
+    - heading-appendix-c-experiment-b-c6f94c6d52-results-27838d1c7b
+    keep_together: []
+generated:
+  main:
+    page_break_before: []
+    keep_together: []
+  extra:
+    page_break_before: []
+    keep_together: []
