@@ -1,0 +1,11 @@
+condition,fold,n_train
+after,0,640
+after,1,640
+after,2,640
+after,3,640
+after,4,640
+before,0,122
+before,1,115
+before,2,137
+before,3,116
+before,4,130

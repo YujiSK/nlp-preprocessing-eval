@@ -1,0 +1,5 @@
+condition,cleaning,analyzer,n_documents,n_duplicates_removed,cleaning_seconds,tokenization_seconds,total_preprocessing_seconds,timing_repeats
+D0,none,mecab_ipadic,7361,6,0.0,5.937465360000715,5.937465360000715,1
+D1,neologdn,mecab_ipadic,7361,6,4.346147971999017,5.878942016999645,10.225089988998661,1
+D2,none,sudachi_core_mode_c,7361,6,0.0,12.794141158999992,12.794141158999992,1
+D3,neologdn,sudachi_core_mode_c,7361,6,4.346147971999017,12.098601091000091,16.444749062999108,1

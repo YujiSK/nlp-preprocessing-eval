@@ -1,0 +1,36 @@
+{
+  "dataset": "Titanic",
+  "source": "OpenML",
+  "openml_data_id": 40945,
+  "openml_version": 1,
+  "source_url": "https://www.openml.org/d/40945",
+  "n_samples": 1309,
+  "target": "survived",
+  "features_used": [
+    "age",
+    "sibsp",
+    "parch",
+    "fare",
+    "pclass",
+    "sex",
+    "embarked"
+  ],
+  "excluded_columns": [
+    "name",
+    "ticket",
+    "cabin",
+    "boat",
+    "body",
+    "home.dest"
+  ],
+  "exclusion_reason": "識別性の高い列、欠損率が極端に高い列、および結果発生後の情報を除外",
+  "missing_by_feature": {
+    "age": 263,
+    "sibsp": 0,
+    "parch": 0,
+    "fare": 1,
+    "pclass": 0,
+    "sex": 0,
+    "embarked": 2
+  }
+}

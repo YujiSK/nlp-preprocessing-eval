@@ -1,0 +1,10 @@
+metric,value,decision
+n_documents,7361,
+exact_text_duplicates_removed,6,
+duplicate_url_rows,0,
+duplicate_filename_rows,0,
+unparseable_date_rows,0,
+min_date,2000-03-01T14:52:00+09:00,
+max_date,2012-09-04T17:00:00+09:00,
+group_split_required,no,URL・filename重複および明示的group IDがないため
+time_split_in_primary_ablation,no,固定コーパス内の前処理要因比較を目的とし全条件で同一StratifiedKFoldを優先。将来時点への性能一般化には別途時系列評価が必要

@@ -1,0 +1,102 @@
+/* task9 FINAL_REPORT.md -> PDF 用スタイルシート
+ * src/reporting/report_builder.py から読み込まれ、生成HTMLへ埋め込まれる。
+ * バージョン管理下に置くことで、CSSの再現性・追跡可能性を担保する（pdf_pipeline_audit.md 参照）。
+ */
+
+@page { size: A4; margin: 18mm 16mm; }
+
+html { font-size: 13px; }
+body {
+  font-family: "Noto Sans CJK JP", "Noto Sans", sans-serif;
+  line-height: 1.75;
+  color: #1a1a1a;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 8px;
+}
+h1, h2, h3, h4 { font-family: "Noto Sans CJK JP", "Noto Sans", sans-serif; font-weight: 700; line-height: 1.4; }
+h1 { font-size: 1.9rem; border-bottom: 3px solid #1d4ed8; padding-bottom: 0.3em; margin-top: 0; }
+h2 { font-size: 1.45rem; border-bottom: 1px solid #cbd5e1; padding-bottom: 0.25em; margin-top: 2.2em; }
+h2.no-page-break-before { page-break-before: avoid; break-before: avoid-page; }
+h3 { font-size: 1.15rem; margin-top: 1.6em; color: #1e3a8a; }
+h4 { font-size: 1.0rem; margin-top: 1.2em; }
+p { margin: 0.8em 0; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 0.92rem; }
+table + p, table + p * { text-align: center; }
+th, td { border: 1px solid #cbd5e1; padding: 5px 8px; text-align: left; }
+th { background: #eef2ff; }
+img { max-width: 100%; display: block; margin: 0 auto; }
+figure { margin: 1em 0; text-align: center; }
+figcaption { color: #475569; font-size: 0.88rem; margin-top: 0.5em; }
+em { color: #475569; }
+code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.88em; }
+pre { background: #0f172a; color: #e2e8f0; padding: 12px 14px; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; line-height: 1.5; }
+pre code { background: none; padding: 0; color: inherit; }
+blockquote { border-left: 4px solid #cbd5e1; margin: 1em 0; padding: 0.2em 1em; color: #475569; }
+hr { border: none; border-top: 1px solid #cbd5e1; margin: 2em 0; }
+ul, ol { margin: 0.6em 0; padding-left: 1.6em; }
+li { margin: 0.25em 0; }
+strong { color: #0f172a; }
+
+/* ===================== 印刷時のページ分割制御 ===================== */
+@media print {
+  h1, h2, h3, h4 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+  h1 + *, h2 + *, h3 + *, h4 + * {
+    break-before: avoid-page;
+    page-break-before: avoid;
+  }
+  figure, .keep-together, .short-code, .small-table {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+  p, li { orphans: 3; widows: 3; }
+  img { max-width: 100%; height: auto; }
+
+  /* 長大な表・コードは分割を許可 */
+  table.long-table { break-inside: auto; }
+  table.long-table thead { display: table-header-group; }
+  table.long-table tr { break-inside: avoid; }
+  pre.long-code { white-space: pre-wrap; break-inside: auto; }
+
+  .force-page-break { break-before: page; page-break-before: always; }
+
+  /* h2章見出しは既定で新規ページから開始する（最初の章はavoidクラスで例外化） */
+  h2 { break-before: page; page-break-before: always; }
+  h2.no-page-break-before { break-before: avoid-page; page-break-before: avoid; }
+}
+
+.report-metadata {
+  margin: 1.5em 0 2em 0;
+  padding: 1.2em 1.5em;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.report-metadata p {
+  margin: 0.35em 0;
+  font-size: 0.88em;
+  color: #4b5563;
+}
+
+.report-metadata strong {
+  color: #111827;
+  font-weight: 600;
+  margin-right: 0.5em;
+}
+
+img[src*="expC_precision_recall_tradeoff"] {
+  width: 60% !important;
+  height: auto;
+}
+
+img[src*="expD_cv_score_bar"] {
+  width: 90% !important;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+}

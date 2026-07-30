@@ -1,0 +1,8 @@
+feature,missing_count,missing_rate
+age,263,0.20091673032849502
+sibsp,0,0.0
+parch,0,0.0
+fare,1,0.0007639419404125286
+pclass,0,0.0
+sex,0,0.0
+embarked,2,0.0015278838808250573

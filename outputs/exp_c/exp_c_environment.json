@@ -1,0 +1,15 @@
+{
+  "python_version": "3.14.4 (main, Jun 18 2026, 14:25:02) [GCC 15.2.0]",
+  "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.43",
+  "processor": "",
+  "sklearn": "1.9.0",
+  "pandas": "3.0.5",
+  "numpy": "2.5.1",
+  "imblearn": "0.14.2",
+  "neologdn": "0.5.6",
+  "sudachipy": "0.6.11",
+  "MeCab": "unknown",
+  "janome": "0.5.0",
+  "matplotlib": "3.11.1",
+  "seaborn": "0.13.2"
+}

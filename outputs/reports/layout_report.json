@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-07-29",
+  "pdf": "outputs/FINAL_REPORT.pdf",
+  "page_count": 24,
+  "n_rendered_pages": 24,
+  "registry_summary": {
+    "total": 59,
+    "by_type": {
+      "heading": 40,
+      "table": 5,
+      "figure": 11,
+      "code": 3
+    }
+  },
+  "pipeline_history": [
+    {
+      "iteration": 1,
+      "overrides": {
+        "page_break_before": [],
+        "keep_together": []
+      },
+      "score": 0,
+      "n_violations": 0,
+      "violation_types": [],
+      "action": "accepted"
+    }
+  ],
+  "best_iteration": 1,
+  "final_overrides": {
+    "page_break_before": [],
+    "keep_together": []
+  },
+  "final_check_result": {
+    "pdf": "/home/rb132/Desktop/Sunagawa/nlp_preprocessing/task9/outputs/FINAL_REPORT.pdf",
+    "page_count": 24,
+    "n_registry_entries": 59,
+    "violations": [],
+    "unresolved": [],
+    "score": 0
+  }
+}

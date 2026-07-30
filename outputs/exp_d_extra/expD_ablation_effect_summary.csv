@@ -1,0 +1,17 @@
+model,effect,mean_diff,std_diff,n_outer_folds,n_improved,n_worsened
+knn,analyzer_effect_clean_D3_minus_D1,0.005235195750745869,0.010352670623657056,5,3,2
+knn,analyzer_effect_raw_D2_minus_D0,0.00024234490362862182,0.007411811732026128,5,3,2
+knn,cleaning_effect_advanced_D3_minus_D2,-0.002837659840525264,0.003106164618045582,5,0,5
+knn,cleaning_effect_simple_D1_minus_D0,-0.007830510687642511,0.0039105018066829525,5,0,5
+linear_svc,analyzer_effect_clean_D3_minus_D1,-0.00217124900761132,0.0043532048000791135,5,1,4
+linear_svc,analyzer_effect_raw_D2_minus_D0,-0.0013247338053308689,0.004757900563036971,5,2,3
+linear_svc,cleaning_effect_advanced_D3_minus_D2,-0.0007360261986647743,0.001150185262187702,5,2,3
+linear_svc,cleaning_effect_simple_D1_minus_D0,0.00011048900361567692,0.001053791479648351,5,4,1
+logistic_regression,analyzer_effect_clean_D3_minus_D1,0.000679890359251556,0.005133242779034009,5,2,3
+logistic_regression,analyzer_effect_raw_D2_minus_D0,0.00019232137296862906,0.0036347168192610163,5,2,3
+logistic_regression,cleaning_effect_advanced_D3_minus_D2,-0.0026306387580713906,0.004547002608209708,5,2,3
+logistic_regression,cleaning_effect_simple_D1_minus_D0,-0.0031182077443543178,0.0024533093605902997,5,0,5
+random_forest,analyzer_effect_clean_D3_minus_D1,-0.0009297850958828846,0.0067025065686313265,5,3,2
+random_forest,analyzer_effect_raw_D2_minus_D0,-0.0012462094815538726,0.008641618024199904,5,3,2
+random_forest,cleaning_effect_advanced_D3_minus_D2,-0.0033395334174296963,0.008845324238563641,5,2,3
+random_forest,cleaning_effect_simple_D1_minus_D0,-0.0036559578031006845,0.006703309474240007,5,2,3

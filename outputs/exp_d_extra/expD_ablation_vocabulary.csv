@@ -1,0 +1,5 @@
+condition,cleaning,analyzer,vocabulary_size
+D0,none,mecab_ipadic,42123
+D1,neologdn,mecab_ipadic,42123
+D2,none,sudachi_core_mode_c,47222
+D3,neologdn,sudachi_core_mode_c,46936

@@ -1,0 +1,17 @@
+experiment,condition,model,metric,cv_mean,cv_std,n_folds
+B,after,knn,accuracy,0.80375,0.04562928062110994,5
+B,after,knn,f1_macro,0.8033077588875444,0.04632431000678,5
+B,after,linear_svc,accuracy,0.79625,0.03468609231377902,5
+B,after,linear_svc,f1_macro,0.7954829288374567,0.03532998003599317,5
+B,after,logistic_regression,accuracy,0.795,0.02977782312392901,5
+B,after,logistic_regression,f1_macro,0.7942113136036227,0.030462465191878858,5
+B,after,random_forest,accuracy,0.835,0.03867937111691452,5
+B,after,random_forest,f1_macro,0.8347472608759119,0.038742174673491,5
+B,before,knn,accuracy,0.7474999999999999,0.04731047716943896,5
+B,before,knn,f1_macro,0.7469096204254385,0.04689142848015045,5
+B,before,linear_svc,accuracy,0.7462500000000001,0.04792572378170202,5
+B,before,linear_svc,f1_macro,0.7443494534520604,0.04809712482485216,5
+B,before,logistic_regression,accuracy,0.75125,0.032295026706909556,5
+B,before,logistic_regression,f1_macro,0.7498627649755665,0.03212213064396631,5
+B,before,random_forest,accuracy,0.7825,0.050852114017019986,5
+B,before,random_forest,f1_macro,0.782037393482242,0.05098599733283908,5
