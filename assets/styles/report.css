@@ -135,3 +135,14 @@ img[src*="expD_cv_score_bar"] {
   display: block;
   margin: 0 auto;
 }
+
+/* 2列配置でも図キャプションを1行に収める */
+.figure-grid-2col figure :is(figcaption, p) {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.figure-grid-2col figure :is(figcaption, p) em {
+  font-size: inherit;
+}

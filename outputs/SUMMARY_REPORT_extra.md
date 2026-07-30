@@ -26,6 +26,8 @@
 | C | 合成不均衡データ (2000件、正例7.4%)  | 補正なし (C0)  | SMOTE (C1) ／`class_weight` (C2、3モデル限定)  | 4モデル共通＋発展 |
 | D | livedoor News Corpus (7,361記事、9クラス)  | クレンジングなし＋IPA辞書 | `neologdn`＋Sudachi Mode C | 4モデル共通 |
 
+*表 1.1: 実験A〜Dの全体構成およびデータセット・適用モデル一覧*
+
 ### 1.3 主要な発見 (数値の要約) 
 
 - **実験A**: 標準化によりk-NNは+0.028086ポイント (0.935010→0.963096) 、Logistic Regressionは+0.019329ポイント (0.954339→0.973669) 改善。Random Forestは平均差・Fold別差ともに**厳密に0.000000**であり、木モデルの尺度不変性が実測でも確認された。Logistic Regressionのfit時間は0.590857秒→0.009130秒 (約1/64.7) に短縮し、Before側で全5 Foldに発生していた`ConvergenceWarning`はAfterで解消した。
@@ -76,6 +78,8 @@
 | Random Forest | 0.956094 ± 0.013796 | 0.956094 ± 0.013796 | 0.000000 | 変化なし (全Fold同値)  |
 | k-NN | 0.935010 ± 0.021925 | 0.963096 ± 0.019997 | +0.028086 | 5改善／0悪化 |
 
+*表 3.1: 実験Aにおける未標準化（Before）と標準化（After）の5-Fold CV Accuracy比較*
+
 5-Fold CVによる標準化前後の精度比較を図 3.1に示す。
 
 ![実験Aにおける未標準化(Before)と標準化(After)の5-Fold CV精度比較](exp_a/expA_cv_score_bar.png)
@@ -114,11 +118,13 @@ k-NNはユークリッド距離に基づくため、未標準化データでは�
 | Random Forest | 0.782500 ± 0.050852 | 0.835000 ± 0.038679 | +0.052500 | 5改善／0悪化 |
 | k-NN | 0.747500 ± 0.047310 | 0.803750 ± 0.045629 | +0.056250 | 5改善／0悪化 |
 
+*表 4.1: 実験Bにおける行削除（Before）と補完（After）の5-Fold CV Accuracy比較*
+
 ![実験Bにおける行削除(Before)と補完(After)の5-Fold CV精度比較](exp_b/expB_cv_score_bar.png)
 *図 4.1: 実験Bにおける行削除 (Before) と補完 (After) の5-Fold CV精度比較*
 
-訓練データ640件に対し、Beforeの完全行保持は平均124.0件 (保持率19.4%) にとどまったが、Afterは全件保持した。また、全欠損列や低頻度カテゴリ統合などのエッジケースは発生しなかった (expB_edge_cases.csv) 。
-fit時間はRandom Forestが+0.043秒 (0.132秒→0.175秒) と最大の増加を示した。
+訓練データ640件に対し、Beforeの完全行保持は平均124.0件（保持率19.4%）にとどまったが、Afterは全件保持した。また、全欠損列や低頻度カテゴリ統合などのエッジケースは発生しなかった（expB_edge_cases.csv）。
+fit時間はRandom Forestが+0.043秒（0.132秒→0.175秒）と最大の増加を示した。
 
 ### 【考察】
 
@@ -142,7 +148,7 @@ fit時間はRandom Forestが+0.043秒 (0.132秒→0.175秒) と最大の増加�
 
 ### 【実験結果】
 
-本実験では、重度のクラス不均衡データ (正例115件/負例1,430件、正例比率 約7.4%) における不均衡補正手法 (C0: 補正なし、C1: SMOTEオーバーサンプリング、C2: class_weight='balanced' 重み付け) が分類性能および学習時間に与える影響を比較評価した。主指標である Average Precision (PR-AUC) の 5-Fold CV 平均値を表 5.1 に示す。また、各手法のスコア分布を図 5.1 に示す。
+本実験では、重度のクラス不均衡データ（正例115件/負例1,430件、正例比率 約7.4%）における不均衡補正手法（C0: 補正なし、C1: SMOTEオーバーサンプリング、C2: class_weight='balanced' 重み付け）が分類性能および学習時間に与える影響を比較評価した。主指標である Average Precision (PR-AUC) の 5-Fold CV 平均値を表 5.1 に示す。また、各手法のスコア分布を図 5.1 に示す。
 
 | model | C0 (補正なし)  | C1 (SMOTE)  | C2 (class_weight)  |
 | :--- | ---: | ---: | ---: |
@@ -189,9 +195,9 @@ Foldごとの正例比率 (`expC_fold_class_counts.csv`) は学習側7.38〜7.44
 
 ### 【実験結果】
 
-本実験では、日本語テキスト分類における前処理パイプライン (Before: クレンジングなし＋IPA辞書 vs After: neologdn＋Sudachi Mode C) が分類精度、語彙数、処理コストに与える影響を評価した。
+本実験では、日本語テキスト分類における前処理パイプライン（Before: クレンジングなし＋IPA辞書 vs After: neologdn＋Sudachi Mode C）が分類精度、語彙数、処理コストに与える影響を評価した。
 
-読込直後に検出された smax 記事の98.9% (861/870件) に及ぶフッター由来のメタデータリークは _strip_footer で1件に低減 (expD_metadata_leak_check.csv) させ、修正後コーパス (7,361記事) にて比較を実施した。5-Fold CV による macro-F1 の比較結果を表 6.1 および図 6.1 に示す。
+読込直後に検出された smax 記事の98.9%（861/870件）に及ぶフッター由来のメタデータリークは _strip_footer で1件に低減（expD_metadata_leak_check.csv）させ、修正後コーパス（7,361記事）にて比較を実施した。5-Fold CV による macro-F1 の比較結果を表 6.1 および図 6.1 に示す。
 
 | model | Before | After | 平均差 (After−Before)  | Fold改善/悪化 |
 | :--- | ---: | ---: | ---: | :--- |
@@ -205,9 +211,9 @@ Foldごとの正例比率 (`expC_fold_class_counts.csv`) は学習側7.38〜7.44
 ![実験DにおけるBefore(IPA辞書)とAfter(neologdn+Sudachi)の5-Fold CV macro-F1比較](exp_d/expD_cv_score_bar.png)
 *図 6.1: 実験Dにおける Before (IPA辞書) と After (neologdn+Sudachi) の5-Fold CV macro-F1比較*
 
-全モデルで平均差は負となり、精度改善は見られなかった。語彙数は42,123語→46,936語 (+11.4%) と増加して圧縮効果は得られず、前処理時間も6.02秒→18.79秒 (約3.1倍) に増大した (expD_preprocessing_time.csv) 。
+全モデルで平均差は負となり、精度改善は見られなかった。語彙数は42,123語→46,936語（+11.4%）と増加して圧縮効果は得られず、前処理時間も6.02秒→18.79秒（約3.1倍）に増大した（expD_preprocessing_time.csv）。
 
-説明性分析 (expD_coefficients.csv) では、it-life-hackで記号「■」の正方向係数 (+7.22) が突出した。同カテゴリ記事の96.4%に「■」が出現しており (他は5.4〜46.0%) 、書式上の特徴を強く捉えていた。
+説明性分析（expD_coefficients.csv）では、it-life-hackで記号「■」の正方向係数（+7.22）が突出した。同カテゴリ記事の96.4%に「■」が出現しており（他は5.4〜46.0%）、書式上の特徴を強く捉えていた。
 
 ### 【考察】
 
@@ -215,7 +221,7 @@ livedoor News Corpusは校正済み記事のためneologdnによる補正対象�
 
 「■」の解釈について、it-life-hack媒体が本文を「■見出し」形式で構成する執筆習慣に起因する。TF-IDFは表層の出現頻度のみに基づくため、内容語と書式トークンを区別できず、この慣習を強い判別特徴として扱った。
 
-Logistic RegressionのCはC=10付近でCVスコアが頭打ちとなり、高次元疎表現 (TF-IDF) 特有の「Train完全適合 (1.000) でもCVが大きく劣化しない」挙動を示した。一方、Random Forestのmax_depth (3〜20) はCVスコアが単調増加し続けた。この挙動を図 6.2に示す。
+Logistic RegressionのCはC=10付近でCVスコアが頭打ちとなり、高次元疎表現（TF-IDF）特有の「Train完全適合（1.000）でもCVが大きく劣化しない」挙動を示した。一方、Random Forestのmax_depth（3〜20）はCVスコアが単調増加し続けた。この挙動を図 6.2に示す。
 
 ![実験DにおけるC(Logistic Regression)およびmax_depth(Random Forest)の推移](exp_d/expD_param_tuning.png)
 *図 6.2: 実験Dにおける C (Logistic Regression) および max_depth (Random Forest) の推移*
@@ -274,13 +280,13 @@ Logistic RegressionのCはC=10付近でCVスコアが頭打ちとなり、高次
 
 ### 8.3 統計的リークとデータ内容リークの二重チェック
 
-Pipeline構造による統計的リーク防止 (学習型前処理をFold内でfitする設計、実験B・Cで徹底) は統計量の混入を防ぐが、**データ内容そのものに起因するリークは防げない**。実験Dでは、`smax`における自社媒体名フッターの混入 (98.9%) や、it-life-hackにおける執筆慣習由来の記号「■」 (96.4%出現、正方向係数1位+7.22) という、書式上の疑似リークを確認した。
+Pipeline構造による統計的リーク防止（学習型前処理をFold内でfitする設計、実験B・Cで徹底）は統計量の混入を防ぐが、**データ内容そのものに起因するリークは防げない**。実験Dでは、`smax`における自社媒体名フッターの混入（98.9%）や、it-life-hackにおける執筆慣習由来の記号「■」（96.4%出現、正方向係数1位+7.22）という、書式上の疑似リークを確認した。
 
 Pipeline化を「リーク対策完了」と過信せず、以下を実務プロセスの必須ステップとする。
 
 - 本文中におけるクラス名・媒体名の出現率を機械的に検査。
-- `coef_` や `feature_importances_` の上位特徴量を点検し、非内容語 (記号・定型文) の混入がないか確認。
-- 除去処理後も同検査を再実行 (本実験でも1回目のフッター除去後、別形式の「■」使用が発覚したため) 。
+- `coef_` や `feature_importances_` の上位特徴量を点検し、非内容語（記号・定型文）の混入がないか確認。
+- 除去処理後も同検査を再実行（本実験でも1回目のフッター除去後、別形式の「■」使用が発覚したため）。
 
 ### 8.4 総括
 
@@ -398,24 +404,26 @@ task9/
 
 ## 付録C：発展実験
 
-### 実験A (発展) ：Permutation Importance
+### 実験A（発展）：Permutation Importance
 
 #### 方法
 
-- Breast Cancerデータ (569件、30特徴量) を使用した。
-- 全条件・モデルで本文同様の StratifiedKFold(n_splits=5, shuffle=True, random_state=42) 分割を共用した。
+- Breast Cancerデータ（569件、30特徴量）を使用した。
+- 本文と同じ `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)` の分割を、全条件・全モデルで共用した。
 - 各モデルを学習Foldのみでfitし、未使用の検証Fold上でAccuracyを評価した。
 - 各特徴量を検証Fold内で30回並べ替え、Accuracy低下量をPermutation Importanceとした。
 - StandardScalerはAfter条件のみPipeline内でfitした。並べ替えはPipelineへの入力列に対して行った。
 
 #### 結果
 
-| モデル | Before上位特徴量 (平均PI)  | After上位特徴量 (平均PI)  | 最大のBefore→After差 |
+| モデル | Before上位特徴量（平均PI） | After上位特徴量（平均PI） | 最大のBefore→After差 |
 |:--|:--|:--|:--|
 | logistic_regression | worst area (0.2776) | worst texture (0.0172) | worst area (-0.2701) |
 | linear_svc | worst area (0.3447) | worst texture (0.0379) | worst area (-0.3079) |
 | random_forest | worst area (0.0116) | worst area (0.0116) | mean concave points (+0.0006) |
 | knn | worst area (0.3814) | worst texture (0.0107) | worst area (-0.3769) |
+
+*表 C.1: 各モデルにおける上位特徴量（Permutation Importance）のBefore/After比較*
 
 <div class="figure-grid-2col" markdown="1">
 
@@ -429,7 +437,7 @@ task9/
 *図 A.3: ランダムフォレストモデルにおけるPermutation Importance*
 
 ![サポートベクターマシンのPermutation Importance](exp_a_extra/expA_permutation_svc.png)
-*図 A.4: サポートベクターマシン (SVC) におけるPermutation Importance*
+*図 A.4: サポートベクターマシン（SVC）におけるPermutation Importance*
 
 </div>
 
@@ -442,7 +450,7 @@ Permutation Importanceは未使用の検証Fold上で算出したため、係数
 #### 実務的示唆
 
 - スケール依存モデルでは標準化と収束状況を説明性評価より先に品質ゲートとして確認する。
-- モデル間の判断感度比較には、生係数の絶対値より検証データでの Permutation Importance を優先する。
+- 異なるモデルの判断感度を比較する場合、生の係数絶対値より検証データ上のPermutation Importanceを優先する。
 - 相関特徴量の重要度を独立した因果寄与や削除根拠として扱わず、特徴量群としての冗長性を確認する。
 
 #### 再現性
@@ -453,29 +461,33 @@ Permutation Importanceは未使用の検証Fold上で算出したため、係数
 - OS: Linux-7.0.0-28-generic-x86_64-with-glibc2.43
 - scoring: `accuracy` / repeats: 30 / seed: 42
 
-### 実験B (発展) ：推論時欠損と予測可能率
+---
+
+### 実験B（発展）：推論時欠損と予測可能率
 
 #### 目的とデータ
 
-自然欠損を含むOpenML Titanic v1 (data_id=40945、1,309件) を用い、推論要求に欠損が含まれる場合の行削除と補完を比較した。使用特徴量は `pclass`, `sex`, `age`, `sibsp`, `parch`, `fare`, `embarked` である。結果発生後に判明する `boat`・`body`、識別性の高い `name`・`ticket`、欠損率の高い `cabin`・`home.dest` は除外した。
+自然欠損を含むOpenML Titanic v1（data_id=40945、1,309件）を用い、推論要求に欠損が含まれる場合の行削除と補完を比較した。使用特徴量は `pclass`, `sex`, `age`, `sibsp`, `parch`, `fare`, `embarked` である。結果発生後に判明する `boat`・`body`、識別性の高い `name`・`ticket`、欠損率の高い `cabin`・`home.dest` は除外した。
 
 #### 評価方法
 
-- 本文と同じ5分割StratifiedKFold (shuffle=True, random_state=42) を全条件・全モデルで共用した。
-- Before (行削除) : 学習時は欠損行を除外し、推論時は7特徴量がすべて揃う行だけを予測した。欠損行は予測不能 (abstain) として数えた。
-- After (補完) : 数値を学習Foldの中央値、カテゴリを学習Foldの最頻値で補完し、全推論行を予測した。補完器はPipeline内でFoldごとにfitした。
+- 全条件・全モデルで同一の5分割StratifiedKFold（shuffle=True, random_state=42）を共用。
+- Before（行削除）: 学習時は欠損行を除外し、推論時は7特徴量がすべて揃う行だけを予測した。欠損行は予測不能（abstain）として数えた。
+- After（補完）: 数値を学習Foldの中央値、カテゴリを学習Foldの最頻値で補完し、全推論行を予測した。補完器はPipeline内でFoldごとにfitした。
 - `accuracy_predicted`は実際に予測できた行だけの性能、`correct_fraction_all`は正解予測数を全推論要求数で割った運用指標であり、予測不能を不正解相当として扱う。
 
 #### 結果
 
-Coverage は Before (平均 0.797 / 未予測率 0.203) から、After では全条件で 1.000 (100%) に到達した。
+Beforeの平均Coverageは0.797、予測不可率は0.203だった。Afterは全Fold・全モデルでCoverage 1.000となった。
 
-| モデル | Before: 予測行Accuracy | Before: 全要求中の正解割合 | After: 全行Accuracy | After: 欠損行Accuracy | 差 (After−Before全要求)  |
+| モデル | Before: 予測行Accuracy | Before: 全要求中の正解割合 | After: 全行Accuracy | After: 欠損行Accuracy | 差（After−Before全要求） |
 |:--|--:|--:|--:|--:|--:|
 | logistic_regression | 0.785 | 0.626 | 0.788 | 0.793 | +0.162 |
 | linear_svc | 0.780 | 0.621 | 0.787 | 0.799 | +0.166 |
 | random_forest | 0.788 | 0.628 | 0.798 | 0.799 | +0.170 |
 | knn | 0.789 | 0.629 | 0.807 | 0.825 | +0.179 |
+
+*表 C.2: 実験Bにおける行削除（Before）と補完（After）のCoverage・Accuracy比較*
 
 <div class="figure-grid-2col" markdown="1">
 
@@ -495,7 +507,9 @@ Coverage は Before (平均 0.797 / 未予測率 0.203) から、After では全
 
 #### 解釈
 
-Before（完全行限定）とAfter（全行対象）は評価範囲が異なり単純比較できないため、運用時はCoverageと全体の正解率を併記すべきである。AfterのCoverage 100%は出力の強制を意味し、欠損行の予測精度を保証しない。詳細は行タイプ別CSVを参照。欠損は自然発生しておりMCARとは限らない。またTitanicは歴史的な小規模データであるため、結果はCoverage指標の挙動確認であり、現行業務への性能一般化を目的としない。
+Beforeの予測行Accuracyは完全行に条件付けられた値であり、Afterの全行Accuracyと評価対象が異なるため、単独で優劣を判断できない。運用上はCoverageと全要求中の正解割合を併記する必要がある。AfterのCoverage 100%は「必ず出力する」ことを意味し、欠損行上の予測が同じ信頼性を持つことを保証しない。詳細CSVには完全行・欠損行別のAfter性能も保存した。
+
+欠損は自然発生しておりMCARとは限らない。またTitanicは歴史的な小規模データであるため、結果はCoverage指標の挙動確認であり、現行業務への性能一般化を目的としない。
 
 #### 実務的示唆
 
@@ -512,13 +526,15 @@ Before（完全行限定）とAfter（全行対象）は評価範囲が異なり
 - OS: Linux-7.0.0-28-generic-x86_64-with-glibc2.43
 - seed: 42
 
-### 実験C (発展) ：内側CVによる閾値最適化
+---
+
+### 実験C（発展）：内側CVによる閾値最適化
 
 #### 目的と設計
 
 不均衡二値分類において、判定閾値を外側testで調整する評価リークを避けながら、F1最大化閾値の効果を評価した。既存実験Cと同じ2,000件・正例約7%の合成データ、補正なしC0条件、外側5-Foldを使用した。閾値効果をSMOTEやクラス重みの効果と混在させないため、対象はLogistic RegressionとLinear SVCに限定した。
 
-各外側train内で3-Fold OOF確率を生成し、0.05〜0.95 (0.01刻み) からF1が最大となる閾値を選択した。同値の場合は0.5に近い値を採用した。選択後、外側train全体でモデルを再fitし、未使用の外側testで一度だけ評価した。Linear SVCは`CalibratedClassifierCV(method='sigmoid', cv=3)`を各学習範囲内で使用した。
+各外側train内で3-Fold OOF確率を生成し、0.05〜0.95（0.01刻み）からF1が最大となる閾値を選択した。同値の場合は0.5に近い値を採用した。選択後、外側train全体でモデルを再fitし、未使用の外側testで一度だけ評価した。Linear SVCは`CalibratedClassifierCV(method='sigmoid', cv=3)`を各学習範囲内で使用した。
 
 #### 結果
 
@@ -527,7 +543,9 @@ Before（完全行限定）とAfter（全行対象）は評価範囲が異なり
 | logistic_regression | 0.316 ± 0.038 | 0.524 | 0.575 | +0.050 | 0.819→0.642 | 0.392→0.528 |
 | linear_svc | 0.298 ± 0.029 | 0.527 | 0.584 | +0.057 | 0.860→0.638 | 0.385→0.541 |
 
-Fold単位のF1改善数は、ロジスティック回帰が5/5 Fold、Linear SVCが4/5 Fold（1 Fold悪化）であった。
+*表 C.3: 実験Cにおけるモデル別の最適化閾値とF1スコアの改善効果（ΔF1）*
+
+Fold単位のF1差では、logistic_regressionは改善5 Fold・悪化0 Fold、linear_svcは改善4 Fold・悪化1 Foldだった。
 
 ![Logistic RegressionのNested閾値最適化](exp_c_extra/expC_threshold_lr.png)
 *図 C.1: Logistic Regressionの内側CV閾値選択と外側Fold性能*
@@ -545,7 +563,7 @@ Fold単位のF1改善数は、ロジスティック回帰が5/5 Fold、Linear SV
 
 - 閾値最適化の目的関数を事前固定し、外側testや本番結果で後から選び直さない。
 - Linear SVCのスコアを確率として使う場合、学習範囲内だけで校正する。
-- Average Precision等のランキング評価と、Recall・Precision・F1等の閾値依存指標は分けて監視する。
+- Average Precisionなどのランキング品質と、Recall・Precision・F1など運用閾値依存指標を分けて監視する。
 
 #### 再現性
 
@@ -554,9 +572,11 @@ Fold単位のF1改善数は、ロジスティック回帰が5/5 Fold、Linear SV
 - scikit-learn: 1.9.0
 - OS: Linux-7.0.0-28-generic-x86_64-with-glibc2.43
 - outer folds: 5 / inner folds: 3 / seed: 42
-- condition: C0 (補正なし)  / threshold objective: F1
+- condition: C0（補正なし） / threshold objective: F1
 
-### 実験D (発展) ：D0〜D3アブレーション
+---
+
+### 実験D（発展）：D0〜D3アブレーション
 
 #### 設計
 
@@ -566,6 +586,8 @@ Fold単位のF1改善数は、ロジスティック回帰が5/5 Fold、Linear SV
 | D1 | neologdn | MeCab＋IPAdic |
 | D2 | なし | Sudachi core＋Mode C |
 | D3 | neologdn | Sudachi core＋Mode C |
+
+*表 C.4: 実験DにおけるD0〜D3のクレンジング・形態素解析条件*
 
 livedoor News Corpusの重複除去後7,361記事を使用した。既存実験Dと同じ外側5-Fold、TF-IDF設定、4モデル、乱数seedを全条件で共用し、TF-IDFは各学習Fold内だけでfitした。クレンジングと解析器以外の条件を固定し、同一Foldのペア差として要因効果を算出した。
 
@@ -578,6 +600,8 @@ livedoor News Corpusの重複除去後7,361記事を使用した。既存実験D
 | random_forest | 0.8895 ± 0.0071 | 0.8859 ± 0.0064 | 0.8883 ± 0.0065 | 0.8850 ± 0.0128 |
 | knn | 0.7917 ± 0.0058 | 0.7839 ± 0.0074 | 0.7920 ± 0.0034 | 0.7891 ± 0.0048 |
 
+*表 C.5: 実験Dにおける形態素解析・前処理パイプライン別のスコア比較要約*
+
 #### 語彙数・決定論的前処理コスト
 
 | 条件 | 語彙数 | クレンジング秒 | 解析秒 | 合計秒 |
@@ -587,6 +611,8 @@ livedoor News Corpusの重複除去後7,361記事を使用した。既存実験D
 | D2 | 47,222 | 0.000 | 12.794 | 12.794 |
 | D3 | 46,936 | 4.346 | 12.099 | 16.445 |
 
+*表 C.6: 実験DにおけるD0〜D3の語彙数および決定論的前処理コスト*
+
 #### 要因別macro-F1差
 
 | モデル | Cleaning: simple D1−D0 | Cleaning: advanced D3−D2 | Analyzer: raw D2−D0 | Analyzer: cleaned D3−D1 |
@@ -595,6 +621,8 @@ livedoor News Corpusの重複除去後7,361記事を使用した。既存実験D
 | linear_svc | +0.0001 | -0.0007 | -0.0013 | -0.0022 |
 | random_forest | -0.0037 | -0.0033 | -0.0012 | -0.0009 |
 | knn | -0.0078 | -0.0028 | +0.0002 | +0.0052 |
+
+*表 C.7: 実験Dにおけるクレンジング・形態素解析器の要因別macro-F1差*
 
 ![Logistic RegressionのD0〜D3アブレーション](exp_d_extra/expD_ablation_lr.png)
 *図 D.1: Logistic Regressionの性能と要因効果*
@@ -613,9 +641,9 @@ livedoor News Corpusの重複除去後7,361記事を使用した。既存実験D
 
 #### 結果の要約
 
-クレンジング効果は、MeCab/IPAdic条件ではLinear SVC (+0.0001) を除く3モデルでmacro-F1が低下し、Sudachi条件では4モデルすべてで低下した。最大低下はMeCab/IPAdic＋k-NNの−0.0078だった。解析器効果は−0.0022〜+0.0052の範囲でモデル・クレンジング条件により方向が異なり、一貫した改善は観測されなかった。
+クレンジング効果は、MeCab/IPAdic条件ではLinear SVC（+0.0001）を除く3モデルでmacro-F1が低下し、Sudachi条件では4モデルすべてで低下した。最大低下はMeCab/IPAdic＋k-NNの−0.0078だった。解析器効果は−0.0022〜+0.0052の範囲でモデル・クレンジング条件により方向が異なり、一貫した改善は観測されなかった。
 
-MeCab/IPAdicではneologdn適用前後の語彙数がともに42,123だった。Sudachiでは47,222から46,936へ286語 (0.61%) 減少したが、MeCab/IPAdicより約4,800語多かった。単一実行の合計前処理時間はD0 5.94秒、D1 10.23秒、D2 12.79秒、D3 16.44秒であり、本データ・実装では高度解析とクレンジングはいずれも処理コストを増加させた。
+MeCab/IPAdicではneologdn適用前後の語彙数がともに42,123だった。Sudachiでは47,222から46,936へ286語（0.61%）減少したが、MeCab/IPAdicより約4,800語多かった。単一実行の合計前処理時間はD0 5.94秒、D1 10.23秒、D2 12.79秒、D3 16.44秒であり、本データ・実装では高度解析とクレンジングはいずれも処理コストを増加させた。
 
 #### 実務的示唆
 
@@ -625,9 +653,9 @@ MeCab/IPAdicではneologdn適用前後の語彙数がともに42,123だった。
 
 #### 解釈上の注意
 
-2×2比較により、クレンジング効果は同じ解析器内 (D1−D0、D3−D2) 、解析器効果は同じクレンジング条件内 (D2−D0、D3−D1) で評価した。差は同一外側Foldの記述的ペア差であり、CV Foldを独立標本とみなす有意差検定は行っていない。
+2×2比較により、クレンジング効果は同じ解析器内（D1−D0、D3−D2）、解析器効果は同じクレンジング条件内（D2−D0、D3−D1）で評価した。差は同一外側Foldの記述的ペア差であり、CV Foldを独立標本とみなす有意差検定は行っていない。
 
-語彙数は全データに記述統計としてTF-IDF (min_df=2、max_features制限なし) をfitした値で、性能評価には使用していない。前処理時間は単一実行の参考値であり、クレンジング済みテキストをD1/D3で共用して計算した実測時間を、それぞれのEnd-to-End想定コストへ加算した。CPU負荷等による変動を含む。
+語彙数は全データに記述統計としてTF-IDF（min_df=2、max_features制限なし）をfitした値で、性能評価には使用していない。前処理時間は単一実行の参考値であり、クレンジング済みテキストをD1/D3で共用して計算した実測時間を、それぞれのEnd-to-End想定コストへ加算した。CPU負荷等による変動を含む。
 
 #### 再現性
 

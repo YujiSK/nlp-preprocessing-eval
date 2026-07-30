@@ -4,7 +4,8 @@
       "iteration": 1,
       "overrides": {
         "page_break_before": [
-          "heading-1-3"
+          "heading-1-3",
+          "heading-appendix-c-section-10"
         ],
         "keep_together": []
       },
@@ -17,17 +18,18 @@
   "best_iteration": 1,
   "final_overrides": {
     "page_break_before": [
-      "heading-1-3"
+      "heading-1-3",
+      "heading-appendix-c-section-10"
     ],
     "keep_together": []
   },
   "final_result": {
     "pdf": "/home/rb132/Desktop/Sunagawa/nlp_preprocessing/task9/outputs/SUMMARY_REPORT.pdf",
-    "page_count": 19,
+    "page_count": 20,
     "n_registry_entries": 58,
     "violations": [],
     "unresolved": [],
     "score": 0
   },
-  "n_rendered_pages": 19
+  "n_rendered_pages": 20
 }

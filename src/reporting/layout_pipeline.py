@@ -187,6 +187,25 @@ def run_pipeline(
     }
 
 
+def build_pdf_only(
+    md_path: Path,
+    pdf_path: Path,
+    build_dir: Path,
+) -> dict:
+    """既存Markdownと成果物をHTML化し、検査・自動修復・ページ画像化なしでPDFを描画する。"""
+    html_path, registry_path = report_build.build(
+        md_path=md_path,
+        build_dir=build_dir,
+    )
+    pdf_render.render_html_to_pdf(html_path, pdf_path)
+    return {
+        "pdf": str(pdf_path),
+        "html": str(html_path),
+        "source_registry": str(registry_path),
+        "mode": "pdf-only",
+    }
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """レポートビルドCLIの引数を解析する。"""
     parser = argparse.ArgumentParser(description="Build and validate PDF report(s).")
@@ -200,6 +219,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "'extra' (SUMMARY_REPORT_extra), or 'both' (default)."
         ),
     )
+    parser.add_argument(
+        "--pdf-only",
+        "-p",
+        action="store_true",
+        help=(
+            "Build HTML and PDF only from existing Markdown/results; "
+            "skip layout checks, auto-fixes, and page-image rendering."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -209,6 +237,14 @@ def main(argv: list[str] | None = None) -> int:
     reports = {}
     for stem in REPORT_STEMS[args.target]:
         print(f"Building {stem}.pdf ...")
+        if args.pdf_only:
+            reports[stem] = build_pdf_only(
+                md_path=OUTPUTS_DIR / f"{stem}.md",
+                pdf_path=OUTPUTS_DIR / f"{stem}.pdf",
+                build_dir=RENDERS_ROOT / "_build" / stem.lower(),
+            )
+            continue
+
         reports[stem] = run_pipeline(
             md_path=OUTPUTS_DIR / f"{stem}.md",
             pdf_path=OUTPUTS_DIR / f"{stem}.pdf",
@@ -222,6 +258,8 @@ def main(argv: list[str] | None = None) -> int:
             encoding="utf-8",
         )
     print(json.dumps(reports, ensure_ascii=False, indent=2, default=str))
+    if args.pdf_only:
+        return 0
     return 1 if any(report["final_result"]["violations"] for report in reports.values()) else 0
 
 

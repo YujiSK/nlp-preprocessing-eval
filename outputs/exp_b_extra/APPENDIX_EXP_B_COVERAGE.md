@@ -22,6 +22,10 @@ Beforeの平均Coverageは0.797、予測不可率は0.203だった。Afterは全
 | random_forest | 0.788 | 0.628 | 0.798 | 0.799 | +0.170 |
 | knn | 0.789 | 0.629 | 0.807 | 0.825 | +0.179 |
 
+*表 C.2: 実験Bにおける行削除（Before）と補完（After）のCoverage・Accuracy比較*
+
+<div class="figure-grid-2col" markdown="1">
+
 ![Logistic RegressionのCoverage評価](expB_coverage_lr.png)
 *図 B.1: Logistic Regressionの推論時欠損とCoverage*
 
@@ -33,6 +37,8 @@ Beforeの平均Coverageは0.797、予測不可率は0.203だった。Afterは全
 
 ![k-NNのCoverage評価](expB_coverage_knn.png)
 *図 B.4: k-NNの推論時欠損とCoverage*
+
+</div>
 
 ## 解釈
 

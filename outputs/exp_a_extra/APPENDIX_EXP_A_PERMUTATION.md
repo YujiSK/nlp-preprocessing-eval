@@ -17,6 +17,8 @@
 | random_forest | worst area (0.0116) | worst area (0.0116) | mean concave points (+0.0006) |
 | knn | worst area (0.3814) | worst texture (0.0107) | worst area (-0.3769) |
 
+*表 C.1: 各モデルにおける上位特徴量（Permutation Importance）のBefore/After比較*
+
 <div class="figure-grid-2col" markdown="1">
 
 ![k-NNモデルのPermutation Importance](expA_permutation_knn.png)

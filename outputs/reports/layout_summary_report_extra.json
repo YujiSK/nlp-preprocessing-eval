@@ -25,7 +25,7 @@
   },
   "final_result": {
     "pdf": "/home/rb132/Desktop/Sunagawa/nlp_preprocessing/task9/outputs/SUMMARY_REPORT_extra.pdf",
-    "page_count": 28,
+    "page_count": 31,
     "n_registry_entries": 109,
     "violations": [],
     "unresolved": [
@@ -92,5 +92,5 @@
     ],
     "score": 0
   },
-  "n_rendered_pages": 28
+  "n_rendered_pages": 31
 }

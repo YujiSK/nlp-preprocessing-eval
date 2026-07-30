@@ -371,3 +371,30 @@ def test_pipeline_parse_args_rejects_unknown_target():
     """未定義のビルド対象はargparseで拒否する。"""
     with pytest.raises(SystemExit):
         pipeline.parse_args(["--target", "unknown"])
+
+
+def test_pipeline_parse_args_accepts_pdf_only_short_option():
+    """-pでPDF描画専用モードを選択できる。"""
+    args = pipeline.parse_args(["--target", "extra", "-p"])
+    assert args.target == "extra"
+    assert args.pdf_only is True
+
+
+def test_pipeline_main_pdf_only_skips_validation(monkeypatch, tmp_path):
+    """PDF専用モードでは検査パイプラインを呼ばず、描画専用経路だけを実行する。"""
+    calls = []
+
+    def fake_build_pdf_only(**kwargs):
+        calls.append(kwargs["md_path"].stem)
+        return {"mode": "pdf-only"}
+
+    def fail_run_pipeline(**kwargs):
+        raise AssertionError("run_pipeline must not run in --pdf-only mode")
+
+    monkeypatch.setattr(pipeline, "OUTPUTS_DIR", tmp_path)
+    monkeypatch.setattr(pipeline, "RENDERS_ROOT", tmp_path / "renders")
+    monkeypatch.setattr(pipeline, "build_pdf_only", fake_build_pdf_only)
+    monkeypatch.setattr(pipeline, "run_pipeline", fail_run_pipeline)
+
+    assert pipeline.main(["--target", "both", "--pdf-only"]) == 0
+    assert calls == ["SUMMARY_REPORT", "SUMMARY_REPORT_extra"]

@@ -9,6 +9,8 @@
 | D2 | なし | Sudachi core＋Mode C |
 | D3 | neologdn | Sudachi core＋Mode C |
 
+*表 C.4: 実験DにおけるD0〜D3のクレンジング・形態素解析条件*
+
 livedoor News Corpusの重複除去後7,361記事を使用した。既存実験Dと同じ外側5-Fold、TF-IDF設定、4モデル、乱数seedを全条件で共用し、TF-IDFは各学習Fold内だけでfitした。クレンジングと解析器以外の条件を固定し、同一Foldのペア差として要因効果を算出した。
 
 ## macro-F1
@@ -20,6 +22,8 @@ livedoor News Corpusの重複除去後7,361記事を使用した。既存実験D
 | random_forest | 0.8895 ± 0.0071 | 0.8859 ± 0.0064 | 0.8883 ± 0.0065 | 0.8850 ± 0.0128 |
 | knn | 0.7917 ± 0.0058 | 0.7839 ± 0.0074 | 0.7920 ± 0.0034 | 0.7891 ± 0.0048 |
 
+*表 C.5: 実験Dにおける形態素解析・前処理パイプライン別のスコア比較要約*
+
 ## 語彙数・決定論的前処理コスト
 
 | 条件 | 語彙数 | クレンジング秒 | 解析秒 | 合計秒 |
@@ -29,6 +33,8 @@ livedoor News Corpusの重複除去後7,361記事を使用した。既存実験D
 | D2 | 47,222 | 0.000 | 12.794 | 12.794 |
 | D3 | 46,936 | 4.346 | 12.099 | 16.445 |
 
+*表 C.6: 実験DにおけるD0〜D3の語彙数および決定論的前処理コスト*
+
 ## 要因別macro-F1差
 
 | モデル | Cleaning: simple D1−D0 | Cleaning: advanced D3−D2 | Analyzer: raw D2−D0 | Analyzer: cleaned D3−D1 |
@@ -37,6 +43,8 @@ livedoor News Corpusの重複除去後7,361記事を使用した。既存実験D
 | linear_svc | +0.0001 | -0.0007 | -0.0013 | -0.0022 |
 | random_forest | -0.0037 | -0.0033 | -0.0012 | -0.0009 |
 | knn | -0.0078 | -0.0028 | +0.0002 | +0.0052 |
+
+*表 C.7: 実験Dにおけるクレンジング・形態素解析器の要因別macro-F1差*
 
 ![Logistic RegressionのD0〜D3アブレーション](expD_ablation_lr.png)
 *図 D.1: Logistic Regressionの性能と要因効果*

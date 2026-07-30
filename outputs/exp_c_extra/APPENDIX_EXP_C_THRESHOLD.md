@@ -13,6 +13,8 @@
 | logistic_regression | 0.316 ± 0.038 | 0.524 | 0.575 | +0.050 | 0.819→0.642 | 0.392→0.528 |
 | linear_svc | 0.298 ± 0.029 | 0.527 | 0.584 | +0.057 | 0.860→0.638 | 0.385→0.541 |
 
+*表 C.3: 実験Cにおけるモデル別の最適化閾値とF1スコアの改善効果（ΔF1）*
+
 Fold単位のF1差では、logistic_regressionは改善5 Fold・悪化0 Fold、linear_svcは改善4 Fold・悪化1 Foldだった。
 
 ![Logistic RegressionのNested閾値最適化](expC_threshold_lr.png)
