@@ -4,7 +4,8 @@
       "iteration": 1,
       "overrides": {
         "page_break_before": [
-          "heading-1-3"
+          "heading-1-3",
+          "heading-appendix-c-section-10"
         ],
         "keep_together": []
       },
@@ -17,21 +18,17 @@
   "best_iteration": 1,
   "final_overrides": {
     "page_break_before": [
-      "heading-1-3"
+      "heading-1-3",
+      "heading-appendix-c-section-10"
     ],
     "keep_together": []
   },
   "final_result": {
     "pdf": "/home/rb132/Desktop/Sunagawa/nlp_preprocessing/task9/outputs/SUMMARY_REPORT_extra.pdf",
-    "page_count": 35,
-    "n_registry_entries": 108,
+    "page_count": 28,
+    "n_registry_entries": 109,
     "violations": [],
     "unresolved": [
-      {
-        "id": "heading-appendix-c",
-        "check": "orphan_heading",
-        "reason": "text_not_matched"
-      },
       {
         "id": "heading-appendix-c-section-1",
         "check": "orphan_heading",
@@ -43,52 +40,57 @@
         "reason": "text_not_matched"
       },
       {
-        "id": "heading-appendix-c-section-5",
+        "id": "heading-appendix-c-section-3",
         "check": "orphan_heading",
         "reason": "text_not_matched"
       },
       {
-        "id": "heading-appendix-d-section-3",
+        "id": "heading-appendix-c-section-6",
         "check": "orphan_heading",
         "reason": "text_not_matched"
       },
       {
-        "id": "heading-appendix-d-section-4",
+        "id": "heading-appendix-c-section-10",
         "check": "orphan_heading",
         "reason": "text_not_matched"
       },
       {
-        "id": "heading-appendix-d-section-6",
+        "id": "heading-appendix-c-section-11",
         "check": "orphan_heading",
         "reason": "text_not_matched"
       },
       {
-        "id": "heading-appendix-e-section-2",
+        "id": "heading-appendix-c-section-13",
         "check": "orphan_heading",
         "reason": "text_not_matched"
       },
       {
-        "id": "heading-appendix-e-section-5",
+        "id": "heading-appendix-c-section-16",
         "check": "orphan_heading",
         "reason": "text_not_matched"
       },
       {
-        "id": "heading-appendix-f",
+        "id": "heading-appendix-c-section-19",
         "check": "orphan_heading",
         "reason": "text_not_matched"
       },
       {
-        "id": "heading-appendix-f-section-1",
+        "id": "heading-appendix-c-section-20",
         "check": "orphan_heading",
         "reason": "text_not_matched"
       },
       {
-        "id": "heading-appendix-f-section-8",
+        "id": "heading-appendix-c-section-21",
+        "check": "orphan_heading",
+        "reason": "text_not_matched"
+      },
+      {
+        "id": "heading-appendix-c-section-28",
         "check": "orphan_heading",
         "reason": "text_not_matched"
       }
     ],
     "score": 0
   },
-  "n_rendered_pages": 35
+  "n_rendered_pages": 28
 }

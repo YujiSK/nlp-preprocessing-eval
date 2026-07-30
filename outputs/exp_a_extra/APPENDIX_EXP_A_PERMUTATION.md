@@ -17,17 +17,21 @@
 | random_forest | worst area (0.0116) | worst area (0.0116) | mean concave points (+0.0006) |
 | knn | worst area (0.3814) | worst texture (0.0107) | worst area (-0.3769) |
 
-![Logistic RegressionのPermutation Importance](expA_permutation_lr.png)
-*図 A.1: Logistic Regressionの検証Fold上Permutation Importance*
+<div class="figure-grid-2col" markdown="1">
 
-![Linear SVCのPermutation Importance](expA_permutation_svc.png)
-*図 A.2: Linear SVCの検証Fold上Permutation Importance*
+![k-NNモデルのPermutation Importance](expA_permutation_knn.png)
+*図 A.1: k-NNモデルにおけるPermutation Importance*
 
-![Random ForestのPermutation Importance](expA_permutation_rf.png)
-*図 A.3: Random Forestの検証Fold上Permutation Importance*
+![ロジスティック回帰モデルのPermutation Importance](expA_permutation_lr.png)
+*図 A.2: ロジスティック回帰モデルにおけるPermutation Importance*
 
-![k-NNのPermutation Importance](expA_permutation_knn.png)
-*図 A.4: k-NNの検証Fold上Permutation Importance*
+![ランダムフォレストモデルのPermutation Importance](expA_permutation_rf.png)
+*図 A.3: ランダムフォレストモデルにおけるPermutation Importance*
+
+![サポートベクターマシンのPermutation Importance](expA_permutation_svc.png)
+*図 A.4: サポートベクターマシン（SVC）におけるPermutation Importance*
+
+</div>
 
 ## 解釈上の注意
 
