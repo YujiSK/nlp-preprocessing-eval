@@ -207,3 +207,14 @@ task9/
 - GitHub公開後の国際的な閲覧性を高めるため、既存の日本語READMEを保持しつつ同等内容の英語セクションを追加した。
 - リポジトリ名に合わせて表題を`NLP Preprocessing Evaluation`へ変更し、冒頭に英語・日本語のページ内リンクを設置した。
 - 現行構成に合わせて、両言語で概要、ディレクトリ責務、主要コマンド、ソース配置規約を整合させた。
+
+### 14:25 — PDFビルド対象選択オプションの実装開始
+- `build_report.py`から本編のみ、発展版のみ、両方を選べる`--target/-t`オプションの実装に着手した。
+- CLIを薄いラッパーとして維持するため、引数解析と対象選択ロジックは`src/reporting/layout_pipeline.py`へ実装する方針とした。
+
+### 14:28 — PDFビルド対象選択オプションの実装完了
+- `--target/-t`に`main`、`extra`、`both`を追加し、省略時は従来どおり`both`を選択するようにした。
+- 対象選択と`argparse`は`src/reporting/layout_pipeline.py`へ実装し、`scripts/report/build_report.py`は薄いCLIラッパーのまま維持した。
+- `--help`表示、3対象の分岐、不正値拒否を確認するテスト4件を追加した。
+- PDF結合テストを含む全20テストが成功した（既知の未標準化Logistic Regression収束警告6件のみ）。
+- 作業前から存在した`assets/styles/report.css`の未コミット変更には触れていない。

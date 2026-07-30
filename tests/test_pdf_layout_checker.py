@@ -341,3 +341,33 @@ def test_repair_loop_rolls_back_when_no_improvement(monkeypatch, tmp_path):
     assert "rollback_to_iteration" in actions
     assert summary["final_result"]["score"] == -2
     assert summary["best_iteration"] == 1
+
+
+@pytest.mark.parametrize(
+    ("target", "expected_stems"),
+    [
+        ("main", ["SUMMARY_REPORT"]),
+        ("extra", ["SUMMARY_REPORT_extra"]),
+        ("both", ["SUMMARY_REPORT", "SUMMARY_REPORT_extra"]),
+    ],
+)
+def test_pipeline_main_selects_requested_reports(monkeypatch, tmp_path, target, expected_stems):
+    """--targetに応じて指定レポートだけをビルドする。"""
+    calls = []
+
+    def fake_run_pipeline(**kwargs):
+        calls.append(kwargs["md_path"].stem)
+        return {"final_result": {"violations": []}}
+
+    monkeypatch.setattr(pipeline, "OUTPUTS_DIR", tmp_path)
+    monkeypatch.setattr(pipeline, "RENDERS_ROOT", tmp_path / "renders")
+    monkeypatch.setattr(pipeline, "run_pipeline", fake_run_pipeline)
+
+    assert pipeline.main(["--target", target]) == 0
+    assert calls == expected_stems
+
+
+def test_pipeline_parse_args_rejects_unknown_target():
+    """未定義のビルド対象はargparseで拒否する。"""
+    with pytest.raises(SystemExit):
+        pipeline.parse_args(["--target", "unknown"])
